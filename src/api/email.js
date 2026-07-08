@@ -42,67 +42,30 @@ export async function checkRateLimit(identifier, maxRequests = 5, windowMs = 600
 }
 
 async function postEmail(payload) {
-  const fallbackApiKey = import.meta.env.VITE_RESEND_API_KEY || import.meta.env.RESEND_API_KEY;
+  const response = await fetch(getResendUrl(), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
 
-  try {
-    const response = await fetch(getResendUrl(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (response.ok) {
-      return response.json();
-    }
-
+  if (!response.ok) {
     const errorText = await response.text();
     let message = errorText || 'Email endpoint unavailable';
 
     try {
-      const parsed = JSON.parse(errorText)
-      message = parsed.error || parsed.message || message
+      const parsed = JSON.parse(errorText);
+      message = parsed.error || parsed.message || message;
     } catch {
       // keep the raw text when parsing fails
     }
 
-    if (!fallbackApiKey || response.status === 404) {
-      throw new Error(message);
-    }
-  } catch (error) {
-    if (!fallbackApiKey) {
-      throw new Error('Email service is unavailable. Add VITE_RESEND_API_KEY to configure delivery.');
-    }
-
-    if (error.message?.includes('Failed to fetch') || error.message?.includes('fetch')) {
-      // fall through to direct Resend delivery below
-    } else {
-      throw error;
-    }
+    throw new Error(message);
   }
 
-  const fallback = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${fallbackApiKey}`,
-    },
-    body: JSON.stringify({
-      from: payload.from,
-      to: payload.to,
-      subject: payload.subject,
-      html: payload.html,
-    }),
-  });
-
-  const fallbackData = await fallback.json();
-  if (!fallback.ok) {
-    throw new Error(fallbackData?.message || 'Resend rejected the request');
-  }
-
-  return fallbackData;
+  return response.json();
 }
 
 export async function sendBugAlert({ to, bugCount }) {
