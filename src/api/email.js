@@ -1,6 +1,11 @@
 const RESEND_FROM = 'BuildStack <onboarding@resend.dev>';
-const RESEND_URL = '/api/resend/emails';
 const DEFAULT_TO_EMAIL = 'patole.atharva13@gmail.com';
+
+function getResendUrl() {
+  const configuredUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_APP_URL;
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  return `${configuredUrl || origin || ''}/api/resend/emails`.replace(/([^:]\/)\/+/g, '$1');
+}
 
 let rateLimitStore = {};
 
@@ -40,10 +45,11 @@ async function postEmail(payload) {
   const fallbackApiKey = import.meta.env.VITE_RESEND_API_KEY || import.meta.env.RESEND_API_KEY;
 
   try {
-    const response = await fetch(RESEND_URL, {
+    const response = await fetch(getResendUrl(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify(payload),
     });
