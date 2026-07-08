@@ -37,6 +37,8 @@ export async function checkRateLimit(identifier, maxRequests = 5, windowMs = 600
 }
 
 async function postEmail(payload) {
+  const fallbackApiKey = import.meta.env.VITE_RESEND_API_KEY || import.meta.env.RESEND_API_KEY;
+
   try {
     const response = await fetch(RESEND_URL, {
       method: 'POST',
@@ -60,41 +62,41 @@ async function postEmail(payload) {
       // keep the raw text when parsing fails
     }
 
-    const fallbackApiKey = import.meta.env.VITE_RESEND_API_KEY || import.meta.env.RESEND_API_KEY;
-
     if (!fallbackApiKey || response.status === 404) {
       throw new Error(message);
     }
-
-    const fallback = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${fallbackApiKey}`,
-      },
-      body: JSON.stringify({
-        from: payload.from,
-        to: payload.to,
-        subject: payload.subject,
-        html: payload.html,
-      }),
-    });
-
-    const fallbackData = await fallback.json();
-    if (!fallback.ok) {
-      throw new Error(fallbackData?.message || 'Resend rejected the request');
-    }
-
-    return fallbackData;
   } catch (error) {
-    if (error.message?.includes('Failed to fetch')) {
-      const fallbackApiKey = import.meta.env.VITE_RESEND_API_KEY || import.meta.env.RESEND_API_KEY;
-      if (!fallbackApiKey) {
-        throw new Error('Email service is unavailable. Add VITE_RESEND_API_KEY to test locally.');
-      }
+    if (!fallbackApiKey) {
+      throw new Error('Email service is unavailable. Add VITE_RESEND_API_KEY to configure delivery.');
     }
-    throw error;
+
+    if (error.message?.includes('Failed to fetch') || error.message?.includes('fetch')) {
+      // fall through to direct Resend delivery below
+    } else {
+      throw error;
+    }
   }
+
+  const fallback = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${fallbackApiKey}`,
+    },
+    body: JSON.stringify({
+      from: payload.from,
+      to: payload.to,
+      subject: payload.subject,
+      html: payload.html,
+    }),
+  });
+
+  const fallbackData = await fallback.json();
+  if (!fallback.ok) {
+    throw new Error(fallbackData?.message || 'Resend rejected the request');
+  }
+
+  return fallbackData;
 }
 
 export async function sendBugAlert({ to, bugCount }) {
