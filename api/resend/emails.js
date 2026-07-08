@@ -28,6 +28,8 @@ export default async function handler(req, res) {
     const apiKey = process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY
     if (!apiKey) return res.status(500).json({ error: 'RESEND_API_KEY is not configured.' })
 
+    const recipient = Array.isArray(to) ? to[0] : to
+
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -36,7 +38,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         from: from || process.env.RESEND_FROM_EMAIL || process.env.VITE_RESEND_FROM_EMAIL || 'onboarding@resend.dev',
-        to: [to],
+        to: recipient,
         subject,
         html,
       }),
