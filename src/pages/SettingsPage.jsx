@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Moon, Sun, ShieldCheck, BellRing, Trash2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 
 const defaultPreferences = {
   theme: 'dark',
@@ -11,6 +12,7 @@ const defaultPreferences = {
 
 export default function SettingsPage() {
   const { user } = useAuth()
+  const { theme, setTheme } = useTheme()
   const [preferences, setPreferences] = useState(defaultPreferences)
   const [password, setPassword] = useState('')
 
@@ -18,15 +20,24 @@ export default function SettingsPage() {
     const stored = localStorage.getItem('buildstack-settings')
     if (stored) {
       setPreferences(JSON.parse(stored))
+    } else {
+      setPreferences((current) => ({ ...current, theme }))
     }
-  }, [])
+  }, [theme])
+
+  useEffect(() => {
+    setPreferences((current) => ({ ...current, theme }))
+  }, [theme])
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', preferences.theme === 'dark')
     localStorage.setItem('buildstack-settings', JSON.stringify(preferences))
   }, [preferences])
 
-  const updatePreference = (key, value) => setPreferences((current) => ({ ...current, [key]: value }))
+  const updatePreference = (key, value) => {
+    if (key === 'theme') setTheme(value)
+    setPreferences((current) => ({ ...current, [key]: value }))
+  }
 
   return (
     <div className="space-y-6">

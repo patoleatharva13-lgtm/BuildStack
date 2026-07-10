@@ -6,6 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BuildStack — Plan. Build. Track. Release.</title>
     <meta name="description" content="Project management built for software developers." />
+    <script>
+      try {
+        const stored = localStorage.getItem('buildstack-settings')
+        const parsed = stored ? JSON.parse(stored) : null
+        const theme = parsed?.theme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        document.documentElement.classList.toggle('dark', theme === 'dark')
+      } catch (error) {
+        const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        document.documentElement.classList.toggle('dark', theme === 'dark')
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

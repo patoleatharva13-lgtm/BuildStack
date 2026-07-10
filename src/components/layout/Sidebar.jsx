@@ -17,20 +17,20 @@ const items = [
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 shrink-0 bg-white border-r border-slate-200 flex flex-col">
-      <div className="h-16 flex items-center gap-2 px-5 border-b border-slate-200">
+    <aside className="w-64 shrink-0 bg-white border-r border-slate-200 flex flex-col dark:bg-slate-900 dark:border-slate-800">
+      <div className="h-16 flex items-center gap-2 px-5 border-b border-slate-200 dark:border-slate-800">
         <div className="w-8 h-8 rounded-lg bg-brand-600 grid place-items-center text-white font-bold">B</div>
-        <span className="font-bold text-lg tracking-tight">BuildStack</span>
+        <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-slate-100">BuildStack</span>
       </div>
       <nav className="flex-1 p-3 space-y-1 overflow-auto">
         {items.map(({ to, label, icon: Icon }) => (
           <NavLink key={to} to={to}
-            className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${isActive ? 'bg-brand-50 text-brand-700 font-medium' : 'text-slate-600 hover:bg-slate-100'}`}>
+            className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${isActive ? 'bg-brand-50 text-brand-700 font-medium' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'}`}>
             <Icon size={18} /> {label}
           </NavLink>
         ))}
       </nav>
-      <div className="p-4 text-xs text-slate-400 border-t">v1.0 · BuildStack</div>
+      <div className="p-4 text-xs text-slate-400 dark:text-slate-500 border-t dark:border-slate-800">v1.0 · BuildStack</div>
     </aside>
   )
 }
